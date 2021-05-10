@@ -137,34 +137,36 @@ export async function signIn(req, res) {
 //Update User record
 export async function updateUser(req, res) {
     try{
-        let check_user = await User.findOne({where: {email: req.body.email}});
+        let check_user = await User.findOne({where: {user_id: req.params.id}});
+        let dummy_user = await User.findOne({where: {email: req.body.email}});
 
-        if (check_user){
+        if(check_user.email != req.body.email && dummy_user){
             res.status(400).json({
                 success: false,
-                message: 'Email already in use',
+                message: "Email arealy in use"
             })
-        }else{
+        }
+
+        if (check_user){
             bcrypt.hash(req.body.password, 10).then(async (hash) => {
                 let userObj = {
                     email: req.body.email,
                     password: hash,
                     name: req.body.name
                 }
-                let user_to_update = await User.findOne({where: {user_id: req.params.id}});
 
-                if (user_to_update) {
-                    user_to_update.name = userObj.name;
-                    user_to_update.email = userObj.email;
-                    user_to_update.password = userObj.hash;
+                check_user.name = userObj.name;
+                check_user.email = userObj.email;
+                check_user.password = userObj.password;
 
-                    await user_to_update.save();
-                    await user_to_update.reload();
+                await check_user.save();
+                await check_user.reload();
 
+                if (check_user) {
                     res.status(200).json({
                         success: true,
                         message: 'User updated successfully',
-                        data: user
+                        data: check_user
                     })
                 } else {
                     res.status(400).json({
@@ -172,8 +174,20 @@ export async function updateUser(req, res) {
                         message: 'User could not be updated, Bad request'
                     })
                 }
-            });
+            }).catch(err => {
+                console.log(err);
+                res.status(500).json({
+                    success: false,
+                    message: "Oopss! Something went wrong"
+                })
+            })
+        }else{
+            res.status(400).json({
+                success: false,
+                message: 'User not found'
+            })
         }
+
     }catch(err){
         console.log(err);
         res.status(500).json({
