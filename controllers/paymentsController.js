@@ -6,17 +6,16 @@ import Bill from "../models/bills.model.js";
 export async function capturePayment(req, res) {
     try {
         let payment = await Payment.create(req.body);
-        let bill = await Bill.findOne({where: {bill_id: req.body.bill_id, premise_id: req.body.premise_id}})
+        let bill = await Bill.findOne({where: {bill_id: req.body.bill_id}})
 
         if (payment) {
-            console.log(payment);
-            if (bill.amount === req.body.amount_paid && !bill.paid) {
+            if (bill.amount == req.body.amount_paid && bill.paid == false) {
                 bill.paid = true;
 
                 await bill.save();
                 await bill.reload();
             }
-            if (bill.amount > req.body.amount_paid && !bill.paid) {
+            if (bill.amount > req.body.amount_paid && bill.paid == false) {
                 bill.amount = bill.amount - req.body.amount_paid;
 
                 await bill.save();
