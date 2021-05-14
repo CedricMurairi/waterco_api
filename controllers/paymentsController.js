@@ -11,6 +11,7 @@ export async function capturePayment(req, res) {
         if (payment) {
             if (bill.amount == req.body.amount_paid && bill.paid == false) {
                 bill.paid = true;
+                bill.amount = 0;
 
                 await bill.save();
                 await bill.reload();
